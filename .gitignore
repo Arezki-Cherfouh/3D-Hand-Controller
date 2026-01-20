@@ -1,0 +1,5 @@
+  GNU nano 7.2                       .gitignore                                 
+venv/
+.venv/
+pycache/
+*.pyc
