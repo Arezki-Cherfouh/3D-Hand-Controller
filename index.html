@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Futuristic 3D Hand Controller</title>
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="description"
+      content="Interactive futuristic 3D hand controller built with WebGL and MediaPipe. Control neon 3D shapes using real-time hand tracking, gestures, zoom, rotation, and custom shape scripting."
+    />
+    <meta
+      name="keywords"
+      content="3D hand tracking, WebGL demo, MediaPipe hands, gesture control, JavaScript 3D, interactive 3D shapes, neon WebGL, hand gesture controller, browser 3D app"
+    />
+    <meta name="author" content="Arezki Cherfouh" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Futuristic 3D Hand Controller" />
+    <meta
+      property="og:title"
+      content="Futuristic 3D Hand Controller – WebGL + MediaPipe"
+    />
+    <meta
+      property="og:description"
+      content="Control 3D neon shapes with real-time hand tracking in your browser. Built with WebGL and MediaPipe for gesture-based rotation, movement, and zoom."
+    />
+    <!-- <meta property="og:url" content="https://domain.com/" /> -->
+    <meta property="og:image" content="/favicon.ico" />
+    <meta
+      property="og:image:alt"
+      content="Futuristic 3D Hand Controller Preview"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Futuristic 3D Hand Controller – Gesture Powered WebGL"
+    />
+    <meta
+      name="twitter:description"
+      content="Real-time browser-based 3D hand tracking. Rotate, move, zoom, and customize neon 3D shapes using gestures."
+    />
+    <meta name="twitter:image" content="/favicon.ico" />
+    <meta
+      name="twitter:image:alt"
+      content="Futuristic 3D Hand Controller Preview"
+    />
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        cursor: default !important;
+      }
+
+      @media (pointer: fine) {
+        .btn,
+        .color-btn,
+        /* input,
+        textarea, */
+        select,
+        a {
+          cursor: pointer !important;
+        }
+      }
+      input[type="text"],
+      textarea {
+        cursor: text !important;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #0a0a0a 0%,
+          #1a1a2e 50%,
+          #16213e 100%
+        );
+        color: #fff;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 300px 1fr 350px;
+        height: 100vh;
+        gap: 15px;
+        padding: 15px;
+      }
+
+      /* Panel Styling */
+      .panel {
+        background: rgba(20, 20, 40, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 255, 255, 0.2);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .scrollable-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 5px;
+        padding-left: 5px;
+      }
+
+      .panel-title {
+        font-size: 24px;
+        font-weight: bold;
+        background: linear-gradient(90deg, #00ffff, #ff00ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        flex-shrink: 0;
+      }
+
+      .control-group {
+        margin-bottom: 25px;
+        padding: 15px;
+        background: rgba(0, 255, 255, 0.05);
+        border-radius: 10px;
+        border: 1px solid rgba(0, 255, 255, 0.1);
+      }
+
+      .control-label {
+        display: block;
+        color: #00ffff;
+        margin-bottom: 10px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 12px;
+        margin: 5px 0;
+        border: 2px solid #00ffff;
+        background: rgba(0, 255, 255, 0.1);
+        color: #00ffff;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        outline: none;
+      }
+
+      .btn:hover {
+        background: rgba(0, 255, 255, 0.2);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .btn.active {
+        background: linear-gradient(
+          90deg,
+          rgba(0, 255, 255, 0.3),
+          rgba(255, 0, 255, 0.3)
+        );
+        border-color: #ff00ff;
+        box-shadow: 0 0 25px rgba(255, 0, 255, 0.5);
+      }
+
+      .color-palette {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .color-btn {
+        width: 100%;
+        height: 40px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+
+      .color-btn.active {
+        border-color: #fff;
+        box-shadow: 0 0 20px currentColor;
+      }
+
+      .custom-color-picker {
+        margin-top: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      #userColor {
+        background: none;
+        border: 1px solid rgba(0, 255, 255, 0.5);
+        width: 50px;
+        height: 30px;
+        padding: 0;
+        border-radius: 4px;
+      }
+
+      .canvas-container {
+        position: relative;
+        background: rgba(10, 10, 20, 0.8);
+        border: 1px solid rgba(0, 255, 255, 0.2);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 0 50px rgba(0, 255, 255, 0.2);
+        height: 100%;
+        min-height: 300px;
+      }
+
+      #canvas3d {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .canvas-overlay {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        margin: 5px 0;
+        font-size: 14px;
+      }
+
+      .stat-label {
+        color: #00ffff;
+        margin-right: 15px;
+      }
+      .stat-value {
+        color: #fff;
+        font-weight: bold;
+      }
+
+      .right-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        height: 100%;
+      }
+
+      .video-container {
+        height: 220px;
+        flex-shrink: 0;
+        position: relative;
+        background: #000;
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid rgba(0, 255, 255, 0.2);
+      }
+
+      #video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scaleX(-1);
+      }
+
+      .video-placeholder {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: rgba(0, 255, 255, 0.5);
+      }
+
+      .shape-input {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        background: rgba(0, 255, 255, 0.05);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 14px;
+        font-family: "Courier New", monospace;
+      }
+
+      .instructions {
+        background: rgba(0, 255, 255, 0.05);
+        border-left: 3px solid #00ffff;
+        padding: 15px;
+        margin-top: 20px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+
+      .status-active {
+        background: #00ff00;
+        box-shadow: 0 0 10px #00ff00;
+      }
+      .status-inactive {
+        background: #ff0000;
+        box-shadow: 0 0 10px #ff0000;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Responsive UI Fixes */
+      @media (max-width: 1200px) {
+        body {
+          overflow: auto;
+        }
+        .container {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto;
+          height: auto;
+          gap: 10px;
+          padding: 10px;
+        }
+        .panel {
+          height: auto;
+          min-height: 0;
+        }
+        .canvas-container {
+          height: 450px;
+          order: -1; /* Keep canvas at top for mobile */
+        }
+        .right-panel {
+          height: auto;
+        }
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(0, 255, 255, 0.05);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(0, 255, 255, 0.3);
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Left Panel -->
+      <div class="panel">
+        <h2 class="panel-title">⚡ Controls</h2>
+        <div class="scrollable-content">
+          <div class="control-group">
+            <label class="control-label">
+              <span
+                class="status-indicator status-inactive"
+                id="handStatus"
+              ></span>
+              Hand Tracking
+            </label>
+            <button class="btn" id="toggleTracking">Initializing...</button>
+          </div>
+
+          <div class="control-group" id="shapeSelector">
+            <label class="control-label">3D Shapes</label>
+            <button class="btn active" data-shape="cube">Cube</button>
+            <button class="btn" data-shape="sphere">Sphere</button>
+            <button class="btn" data-shape="torus">Torus</button>
+            <button class="btn" data-shape="pyramid">Pyramid</button>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Neon Colors</label>
+            <div class="color-palette" id="colorPalette">
+              <div
+                class="color-btn active"
+                data-color="0"
+                style="background: #00ffff"
+              ></div>
+              <div
+                class="color-btn"
+                data-color="1"
+                style="background: #ff00ff"
+              ></div>
+              <div
+                class="color-btn"
+                data-color="2"
+                style="background: #00ff00"
+              ></div>
+              <div
+                class="color-btn"
+                data-color="3"
+                style="background: #ffff00"
+              ></div>
+            </div>
+            <div class="custom-color-picker">
+              <input type="color" id="userColor" value="#ffffff" />
+              <button
+                class="btn"
+                id="addCustomColor"
+                style="padding: 5px; font-size: 11px"
+              >
+                Apply Custom
+              </button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <button class="btn" id="resetView">Reset View</button>
+            <button class="btn" id="autoRotate">Auto Rotate</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Panel -->
+      <div class="canvas-container">
+        <canvas id="canvas3d"></canvas>
+        <div class="canvas-overlay">
+          <div class="stat-item">
+            <span class="stat-label">SHAPE:</span
+            ><span class="stat-value" id="currentShape">CUBE</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">ZOOM:</span
+            ><span class="stat-value" id="currentZoom">7.0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">HANDS:</span
+            ><span class="stat-value" id="handCount">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="right-panel">
+        <div class="video-container">
+          <div class="video-placeholder" id="videoPlaceholder">
+            <h3>📹 Camera Feed</h3>
+          </div>
+          <video id="video" class="hidden" autoplay playsinline muted></video>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title">🎨 Custom</h2>
+          <div class="scrollable-content">
+            <label class="control-label">Add Shape Code</label>
+            <input
+              type="text"
+              class="shape-input"
+              id="customShapeName"
+              placeholder="Shape Name"
+            />
+            <textarea
+              class="shape-input"
+              id="customShapeCode"
+              style="min-height: 100px"
+              placeholder="function draw(ctrl) { ... }"
+            ></textarea>
+            <button class="btn" id="addCustomShape">Add Shape</button>
+
+            <div class="instructions">
+              <h4>🎮 Gesture Controls:</h4>
+              <p>✋ <strong>One hand open:</strong> Rotate object</p>
+              <p>✊ <strong>Fist/closed:</strong> Move object</p>
+              <p>👐 <strong>Two hands:</strong> Zoom in/out</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+    <script>
+      class Hand3DController {
+        constructor() {
+          this.canvas = document.getElementById("canvas3d");
+          this.gl = this.canvas.getContext("webgl");
+          this.video = document.getElementById("video");
+
+          this.rotation = { x: 0, y: 0, z: 0 };
+          this.position = { x: 0, y: 0 };
+          this.zoom = -7;
+          this.autoRotateEnabled = false;
+
+          this.prevHandDistance = null;
+          this.prevPoint = null;
+          this.hands = [];
+          this.currentShape = "cube";
+          this.currentColor = [0.0, 1.0, 1.0];
+          this.colors = [
+            [0.0, 1.0, 1.0],
+            [1.0, 0.0, 1.0],
+            [0.0, 1.0, 0.0],
+            [1.0, 1.0, 0.0],
+          ];
+
+          this.customShapes = {};
+          this.trackingActive = false;
+
+          this.initWebGL();
+          this.initEventListeners();
+          this.resizeCanvas();
+          window.addEventListener("resize", () => this.resizeCanvas());
+          this.render();
+
+          // Auto-start tracking on load
+          this.start();
+        }
+
+        initWebGL() {
+          const gl = this.gl;
+          gl.enable(gl.DEPTH_TEST);
+          gl.clearColor(0.04, 0.04, 0.08, 1.0);
+
+          const vsSource = `
+                    attribute vec3 aPos;
+                    uniform mat4 uMV;
+                    uniform mat4 uP;
+                    void main() { gl_Position = uP * uMV * vec4(aPos, 1.0); }
+                `;
+          const fsSource = `
+                    precision mediump float;
+                    uniform vec3 uColor;
+                    void main() { gl_FragColor = vec4(uColor, 1.0); }
+                `;
+
+          const vs = this.compileShader(gl.VERTEX_SHADER, vsSource);
+          const fs = this.compileShader(gl.FRAGMENT_SHADER, fsSource);
+          this.program = gl.createProgram();
+          gl.attachShader(this.program, vs);
+          gl.attachShader(this.program, fs);
+          gl.linkProgram(this.program);
+
+          this.posLoc = gl.getAttribLocation(this.program, "aPos");
+          this.colorLoc = gl.getUniformLocation(this.program, "uColor");
+          this.mvLoc = gl.getUniformLocation(this.program, "uMV");
+          this.pLoc = gl.getUniformLocation(this.program, "uP");
+        }
+
+        compileShader(type, src) {
+          const s = this.gl.createShader(type);
+          this.gl.shaderSource(s, src);
+          this.gl.compileShader(s);
+          return s;
+        }
+
+        resizeCanvas() {
+          const container = this.canvas.parentElement;
+          this.canvas.width = container.clientWidth;
+          this.canvas.height = container.clientHeight;
+          this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        initEventListeners() {
+          document.querySelectorAll("[data-shape]").forEach((btn) => {
+            btn.onclick = () => {
+              document
+                .querySelectorAll("[data-shape]")
+                .forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+              this.currentShape = btn.dataset.shape;
+              document.getElementById("currentShape").textContent =
+                this.currentShape.toUpperCase();
+            };
+          });
+
+          document.querySelectorAll("[data-color]").forEach((btn) => {
+            btn.onclick = () => {
+              document
+                .querySelectorAll(".color-btn")
+                .forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+              this.currentColor = this.colors[parseInt(btn.dataset.color)];
+            };
+          });
+
+          document.getElementById("addCustomColor").onclick = () => {
+            const hex = document.getElementById("userColor").value;
+            const r = parseInt(hex.slice(1, 3), 16) / 255;
+            const g = parseInt(hex.slice(3, 5), 16) / 255;
+            const b = parseInt(hex.slice(5, 7), 16) / 255;
+            this.currentColor = [r, g, b];
+            const btn = document.createElement("div");
+            btn.className = "color-btn active";
+            btn.style.background = hex;
+            document
+              .querySelectorAll(".color-btn")
+              .forEach((b) => b.classList.remove("active"));
+            btn.onclick = () => {
+              document
+                .querySelectorAll(".color-btn")
+                .forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+              this.currentColor = [r, g, b];
+            };
+            document.getElementById("colorPalette").appendChild(btn);
+          };
+
+          document.getElementById("toggleTracking").onclick = () =>
+            this.trackingActive ? this.stop() : this.start();
+
+          document.getElementById("resetView").onclick = () => {
+            this.rotation = { x: 0, y: 0, z: 0 };
+            this.position = { x: 0, y: 0 };
+            this.zoom = -7;
+          };
+
+          document.getElementById("autoRotate").onclick = (e) => {
+            this.autoRotateEnabled = !this.autoRotateEnabled;
+            e.target.classList.toggle("active");
+          };
+
+          document.getElementById("addCustomShape").onclick = () => {
+            const name = document
+              .getElementById("customShapeName")
+              .value.trim()
+              .toLowerCase();
+            const code = document.getElementById("customShapeCode").value;
+            if (name && code) {
+              try {
+                this.customShapes[name] = new Function("ctrl", code);
+                const btn = document.createElement("button");
+                btn.className = "btn";
+                btn.textContent = name;
+                btn.dataset.shape = name;
+                btn.onclick = () => {
+                  document
+                    .querySelectorAll("[data-shape]")
+                    .forEach((b) => b.classList.remove("active"));
+                  btn.classList.add("active");
+                  this.currentShape = name;
+                  document.getElementById("currentShape").textContent =
+                    name.toUpperCase();
+                };
+                document.getElementById("shapeSelector").appendChild(btn);
+              } catch (e) {
+                alert("Code Error: " + e.message);
+              }
+            }
+          };
+        }
+
+        async start() {
+          try {
+            document.getElementById("toggleTracking").textContent =
+              "Requesting Cam...";
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: { width: 640, height: 480 },
+            });
+            this.video.srcObject = stream;
+            this.video.classList.remove("hidden");
+            document.getElementById("videoPlaceholder").classList.add("hidden");
+
+            this.handsModel = new Hands({
+              locateFile: (file) =>
+                `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+            });
+            this.handsModel.setOptions({
+              maxNumHands: 2,
+              modelComplexity: 1,
+              minDetectionConfidence: 0.7,
+              minTrackingConfidence: 0.7,
+            });
+            this.handsModel.onResults((r) => this.onResults(r));
+
+            this.camera = new Camera(this.video, {
+              onFrame: async () => {
+                if (this.trackingActive)
+                  await this.handsModel.send({ image: this.video });
+              },
+              width: 640,
+              height: 480,
+            });
+            this.camera.start();
+            this.trackingActive = true;
+            document.getElementById("handStatus").className =
+              "status-indicator status-active";
+            document.getElementById("toggleTracking").textContent =
+              "Stop Tracking";
+          } catch (e) {
+            console.error(e);
+            document.getElementById("toggleTracking").textContent =
+              "Start Tracking";
+            alert("Camera Error: Please allow camera access and refresh.");
+          }
+        }
+
+        stop() {
+          this.trackingActive = false;
+          if (this.video.srcObject)
+            this.video.srcObject.getTracks().forEach((t) => t.stop());
+          this.video.classList.add("hidden");
+          document
+            .getElementById("videoPlaceholder")
+            .classList.remove("hidden");
+          document.getElementById("handStatus").className =
+            "status-indicator status-inactive";
+          document.getElementById("toggleTracking").textContent =
+            "Start Tracking";
+        }
+
+        onResults(results) {
+          this.hands = results.multiHandLandmarks || [];
+          document.getElementById("handCount").textContent = this.hands.length;
+          this.processGestures();
+        }
+
+        isClosed(lms) {
+          const tips = [8, 12, 16, 20],
+            bases = [5, 9, 13, 17];
+          return tips.filter((t, i) => lms[t].y > lms[bases[i]].y).length >= 2;
+        }
+
+        processGestures() {
+          if (this.hands.length === 0) {
+            this.prevPoint = null;
+            this.prevHandDistance = null;
+            return;
+          }
+
+          const h1 = this.hands[0];
+          const c1 = {
+            x: h1.reduce((s, l) => s + l.x, 0) / 21,
+            y: h1.reduce((s, l) => s + l.y, 0) / 21,
+          };
+          const closed1 = this.isClosed(h1);
+
+          if (this.hands.length === 2) {
+            const h2 = this.hands[1];
+            const c2 = {
+              x: h2.reduce((s, l) => s + l.x, 0) / 21,
+              y: h2.reduce((s, l) => s + l.y, 0) / 21,
+            };
+            const dist = Math.hypot(c1.x - c2.x, c1.y - c2.y);
+            if (this.prevHandDistance) {
+              this.zoom += (dist - this.prevHandDistance) * 15;
+              this.zoom = Math.max(-15, Math.min(-2, this.zoom));
+              document.getElementById("currentZoom").textContent = Math.abs(
+                this.zoom,
+              ).toFixed(1);
+            }
+            this.prevHandDistance = dist;
+          } else {
+            if (this.prevPoint) {
+              const dx = c1.x - this.prevPoint.x;
+              const dy = c1.y - this.prevPoint.y;
+
+              if (closed1) {
+                this.position.x -= dx * 5;
+                this.position.y -= dy * 5;
+              } else {
+                this.rotation.y += dx * 360;
+                this.rotation.x += dy * 360;
+              }
+            }
+            this.prevPoint = c1;
+            this.prevHandDistance = null;
+          }
+        }
+
+        drawLines(verts) {
+          const gl = this.gl;
+          const buf = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(verts),
+            gl.STATIC_DRAW,
+          );
+          gl.enableVertexAttribArray(this.posLoc);
+          gl.vertexAttribPointer(this.posLoc, 3, gl.FLOAT, false, 0, 0);
+          gl.drawArrays(gl.LINES, 0, verts.length / 3);
+          gl.deleteBuffer(buf);
+        }
+
+        render() {
+          const gl = this.gl;
+          gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          gl.useProgram(this.program);
+
+          if (this.autoRotateEnabled) this.rotation.y += 0.5;
+
+          const aspect = this.canvas.width / this.canvas.height;
+          const pMat = this.perspective(45, aspect, 0.1, 50);
+          gl.uniformMatrix4fv(this.pLoc, false, pMat);
+
+          let mv = this.identity();
+          this.translate(mv, this.position.x, this.position.y, this.zoom);
+          this.rotate(mv, this.rotation.x, [1, 0, 0]);
+          this.rotate(mv, this.rotation.y, [0, 1, 0]);
+          gl.uniformMatrix4fv(this.mvLoc, false, mv);
+
+          gl.uniform3fv(this.colorLoc, this.currentColor);
+          this.drawCurrent();
+
+          // Glow Layer
+          this.scale(mv, 1.05, 1.05, 1.05);
+          gl.uniformMatrix4fv(this.mvLoc, false, mv);
+          this.drawCurrent();
+
+          requestAnimationFrame(() => this.render());
+        }
+
+        drawCurrent() {
+          switch (this.currentShape) {
+            case "cube":
+              this.drawLines([
+                -1, -1, 1, 1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1,
+                1, 1, -1, -1, 1, -1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1, 1,
+                1, -1, -1, 1, -1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, -1, -1,
+                1, -1, 1, 1, -1, -1, 1, 1, 1, 1, 1, -1, -1, 1, 1, -1, 1, -1,
+              ]);
+              break;
+            case "sphere":
+              let sv = [];
+              for (let i = 0; i <= 12; i++) {
+                let lat = (Math.PI * i) / 12 - Math.PI / 2,
+                  y = Math.sin(lat),
+                  r = Math.cos(lat);
+                for (let j = 0; j <= 12; j++) {
+                  let lng = (2 * Math.PI * j) / 12,
+                    x = r * Math.cos(lng),
+                    z = r * Math.sin(lng);
+                  sv.push(x, y, z);
+                  if (j > 0) {
+                    sv.push(
+                      r * Math.cos((2 * Math.PI * (j - 1)) / 12),
+                      y,
+                      r * Math.sin((2 * Math.PI * (j - 1)) / 12),
+                    );
+                    sv.push(x, y, z);
+                  }
+                }
+              }
+              this.drawLines(sv);
+              break;
+            case "torus":
+              let tv = [];
+              for (let i = 0; i < 12; i++) {
+                let t = (2 * Math.PI * i) / 12;
+                for (let j = 0; j < 12; j++) {
+                  let p = (2 * Math.PI * j) / 12,
+                    r = 1 + 0.4 * Math.cos(p);
+                  tv.push(r * Math.cos(t), r * Math.sin(t), 0.4 * Math.sin(p));
+                  let p2 = (2 * Math.PI * (j + 1)) / 12;
+                  tv.push(r * Math.cos(t), r * Math.sin(t), 0.4 * Math.sin(p2));
+                }
+              }
+              this.drawLines(tv);
+              break;
+            case "pyramid":
+              this.drawLines([
+                0, 1.5, 0, 1, -1, 1, 0, 1.5, 0, 1, -1, -1, 0, 1.5, 0, -1, -1,
+                -1, 0, 1.5, 0, -1, -1, 1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1,
+                -1, -1, -1, -1, -1, -1, -1, 1, -1, -1, 1, 1, -1, 1,
+              ]);
+              break;
+            default:
+              if (this.customShapes[this.currentShape])
+                this.customShapes[this.currentShape](this);
+          }
+        }
+
+        identity() {
+          return new Float32Array([
+            1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+          ]);
+        }
+        translate(m, x, y, z) {
+          m[12] += x;
+          m[13] += y;
+          m[14] += z;
+        }
+        scale(m, x, y, z) {
+          m[0] *= x;
+          m[5] *= y;
+          m[10] *= z;
+        }
+        rotate(m, deg, axis) {
+          const rad = (deg * Math.PI) / 180,
+            c = Math.cos(rad),
+            s = Math.sin(rad);
+          if (axis[1]) {
+            const m0 = m[0],
+              m2 = m[2],
+              m4 = m[4],
+              m6 = m[6],
+              m8 = m[8],
+              m10 = m[10];
+            m[0] = m0 * c + m2 * s;
+            m[2] = m2 * c - m0 * s;
+            m[4] = m4 * c + m6 * s;
+            m[6] = m6 * c - m4 * s;
+            m[8] = m8 * c + m10 * s;
+            m[10] = m10 * c - m8 * s;
+          } else {
+            const m1 = m[1],
+              m2 = m[2],
+              m5 = m[5],
+              m6 = m[6],
+              m9 = m[9],
+              m10 = m[10];
+            m[1] = m1 * c - m2 * s;
+            m[2] = m2 * c + m1 * s;
+            m[5] = m5 * c - m6 * s;
+            m[6] = m6 * c + m5 * s;
+            m[9] = m9 * c - m10 * s;
+            m[10] = m10 * c + m9 * s;
+          }
+        }
+        perspective(fovy, aspect, near, far) {
+          const f = 1.0 / Math.tan((fovy * Math.PI) / 360);
+          return new Float32Array([
+            f / aspect,
+            0,
+            0,
+            0,
+            0,
+            f,
+            0,
+            0,
+            0,
+            0,
+            (far + near) / (near - far),
+            -1,
+            0,
+            0,
+            (2 * far * near) / (near - far),
+            0,
+          ]);
+        }
+      }
+
+      // Initialize the app
+      window.onload = () => {
+        new Hand3DController();
+      };
+    </script>
+  </body>
+</html>
