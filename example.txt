@@ -1,0 +1,56 @@
+DNA shape:
+const vertices = [];
+const indices = [];
+const turns = 2.5;
+const segments = 80;
+const radius = 0.6;
+const height = 3;
+const baseCount = 10;
+
+// Helix 1 (backbone)
+for (let i = 0; i <= segments; i++) {
+  const t = i / segments;
+  const angle = t * turns * Math.PI * 2;
+  const y = height * t - height / 2;
+  vertices.push(
+    radius * Math.cos(angle),
+    y,
+    radius * Math.sin(angle)
+  );
+}
+
+// Helix 2 (opposite backbone)
+const offset = segments + 1;
+for (let i = 0; i <= segments; i++) {
+  const t = i / segments;
+  const angle = t * turns * Math.PI * 2 + Math.PI;
+  const y = height * t - height / 2;
+  vertices.push(
+    radius * Math.cos(angle),
+    y,
+    radius * Math.sin(angle)
+  );
+}
+
+// Connect backbones with lines
+for (let i = 0; i < segments; i++) {
+  indices.push(i, i + 1);
+  indices.push(offset + i, offset + i + 1);
+}
+
+// Base pairs (rungs)
+for (let i = 0; i < baseCount; i++) {
+  const idx = Math.floor((i / baseCount) * segments);
+  indices.push(idx, offset + idx);
+}
+
+const gl = ctrl.gl;
+const vb = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+const ib = gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(ctrl.posLoc);
+gl.vertexAttribPointer(ctrl.posLoc, 3, gl.FLOAT, false, 0, 0);
+gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
