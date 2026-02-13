@@ -1,3 +1,51 @@
+const lines = [];
+const turns = 2.5;
+const segments = 80;
+const radius = 0.6;
+const height = 3;
+const baseCount = 10;
+
+// Generate helix vertices
+const helix1 = [];
+const helix2 = [];
+
+for (let i = 0; i <= segments; i++) {
+  const t = i / segments;
+  const angle = t * turns * Math.PI * 2;
+  const y = height * t - height / 2;
+  
+  helix1.push([
+    radius * Math.cos(angle),
+    y,
+    radius * Math.sin(angle)
+  ]);
+  
+  helix2.push([
+    radius * Math.cos(angle + Math.PI),
+    y,
+    radius * Math.sin(angle + Math.PI)
+  ]);
+}
+
+// Draw backbone 1
+for (let i = 0; i < segments; i++) {
+  lines.push(...helix1[i], ...helix1[i + 1]);
+}
+
+// Draw backbone 2
+for (let i = 0; i < segments; i++) {
+  lines.push(...helix2[i], ...helix2[i + 1]);
+}
+
+// Draw base pairs (rungs connecting the two helices)
+for (let i = 0; i < baseCount; i++) {
+  const idx = Math.floor((i / baseCount) * segments);
+  lines.push(...helix1[idx], ...helix2[idx]);
+}
+
+ctrl.drawLines(lines);
+
+
 DNA shape:
 const vertices = [];
 const indices = [];
